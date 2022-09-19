@@ -1,11 +1,34 @@
-const path = require('path');
-require('dotenv').config({path: path.resolve(__dirname, '../.env')});
-const express = require('express');
+const path = require("path");
+require("dotenv").config({ path: path.resolve(__dirname, "../.env") });
+const {
+  allReviews,
+  metaData,
+  newReview,
+  helpful,
+  report,
+} = require("./controllers");
+const express = require("express");
 const app = express();
+const { queryParser } = require("express-query-parser");
 
 app.use(express.json());
+app.use(express.urlencoded({ extended: false }));
+app.use(
+  queryParser({
+    parseNull: true,
+    parseUndefined: true,
+    parseBoolean: true,
+    parseNumber: true,
+  })
+);
+
+app.get("/reviews", allReviews);
+app.get("/reviews/meta", metaData);
+app.post("/reviews", newReview);
+app.put("/reviews:/review_id/helpful", helpful);
+app.put("/reviews/:review_id/report", report);
 
 console.log(__dirname);
 app.listen(process.env.PORT, () => {
-  console.log(`server has started on port: ${process.env.PORT}`)
-})
+  console.log(`server has started on port: ${process.env.PORT}`);
+});
