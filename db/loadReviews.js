@@ -1,31 +1,10 @@
-const path = require("path");
-require("dotenv").config({ path: path.resolve(__dirname, "../.env") });
-const es = require("event-stream");
 const fs = require("fs");
 const { parse } = require("csv-parse");
 const { ReviewModel } = require("./reviewModel.js");
-const { Sequelize } = require("sequelize");
+const sequelize = require("./connection.js");
 
 const createConnection = () => {
-  return new Promise((resolve, reject) => {
-    const sequelize = new Sequelize(
-      process.env.DATABASE,
-      process.env.DB_USER,
-      process.env.DB_PASSWORD,
-      {
-        host: "localhost",
-        dialect: "postgres",
-        logging: false,
-        pool: {
-          max: 3,
-          min: 0,
-          acquire: 60000,
-          idle: 10000,
-        },
-      }
-    );
-    resolve(sequelize);
-  });
+  return Promise.resolve(sequelize);
 };
 
 const load = async () => {
@@ -41,7 +20,7 @@ const load = async () => {
   for await (const row of parser) {
     await ReviewModel.bulkCreate([
       {
-        review_id: parseInt(row.id),
+        id: parseInt(row.id),
         product_id: parseInt(row.product_id),
         rating: parseInt(row.rating),
         summary: row.summary,
@@ -63,3 +42,5 @@ const load = async () => {
 };
 
 load().catch((err) => console.log(err));
+
+module.exports = createConnection;

@@ -1,6 +1,6 @@
 const fs = require("fs");
 const { parse } = require("csv-parse");
-const { CharacteristicsModel } = require("./characteristicsModel.js");
+const { CharReviewsModel } = require("./characteristicsReviewModel.js");
 const sequelize = require("./connection.js");
 
 const createConnection = () => {
@@ -9,10 +9,9 @@ const createConnection = () => {
 
 const load = async () => {
   await createConnection();
-  await CharacteristicsModel.sync({ force: true });
 
   const parser = fs
-    .createReadStream(__dirname + "/../data/characteristics.csv")
+    .createReadStream(__dirname + "/../data/characteristic_reviews.csv")
     .pipe(
       parse({
         skip_records_with_error: true,
@@ -20,15 +19,16 @@ const load = async () => {
       })
     );
   for await (const row of parser) {
-    await CharacteristicsModel.bulkCreate([
+    await CharReviewsModel.bulkCreate([
       {
         id: parseInt(row.id),
-        product_id: parseInt(row.product_id),
-        name: row.name,
+        characteristicId: parseInt(row.characteristic_id),
+        reviewId: parseInt(row.review_id),
+        value: parseInt(row.value),
       },
     ]);
   }
-  console.log("Characteristics finished adding");
+  console.log("Characteristics for reviews finished adding");
 };
 
 load().catch((err) => console.log(err));
