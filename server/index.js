@@ -28,7 +28,6 @@ app.post("/reviews", newReview);
 app.put("/reviews/:reviewId/helpful", helpful);
 app.put("/reviews/:reviewId/report", report);
 
-console.log(__dirname);
 app.listen(process.env.PORT, () => {
   console.log(`server has started on port: ${process.env.PORT}`);
 });

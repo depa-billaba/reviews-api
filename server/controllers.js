@@ -60,6 +60,7 @@ const newReview = async (req, res) => {
     photos,
     characteristics,
   } = req.body;
+
   let previousId = await ReviewModel.findOne({
     order: [["id", "DESC"]],
   });
@@ -78,8 +79,14 @@ const newReview = async (req, res) => {
     reviewer_email: email,
   });
   let review_id = reviewPost.dataValues.id;
-  for (let id of characteristics) {
+  let previousCharRevId = await CharReviewsModel.findOne({
+    order: [["id", "DESC"]],
+  });
+  previousCharRevId = previousCharRevId.dataValues.id;
+  for (let id in characteristics) {
+    previousCharRevId++;
     let charPost = await CharReviewsModel.create({
+      id: previousCharRevId,
       reviewId: review_id,
       characteristicId: parseInt(id),
       value: characteristics[id],
@@ -89,7 +96,6 @@ const newReview = async (req, res) => {
 };
 
 const helpful = async (req, res) => {
-  console.log(reviewId);
   let update = await ReviewModel.increment(
     { helpfulness: 1 },
     {
