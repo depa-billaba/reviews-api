@@ -25,8 +25,8 @@ app.use(
 app.get("/reviews", allReviews);
 app.get("/reviews/meta", metaData);
 app.post("/reviews", newReview);
-app.put("/reviews:/review_id/helpful", helpful);
-app.put("/reviews/:review_id/report", report);
+app.put("/reviews/:reviewId/helpful", helpful);
+app.put("/reviews/:reviewId/report", report);
 
 console.log(__dirname);
 app.listen(process.env.PORT, () => {

@@ -60,7 +60,12 @@ const newReview = async (req, res) => {
     photos,
     characteristics,
   } = req.body;
+  let previousId = await ReviewModel.findOne({
+    order: [["id", "DESC"]],
+  });
+  previousId = previousId.dataValues.id;
   let reviewPost = await ReviewModel.create({
+    id: previousId + 1,
     product_id: product_id,
     rating: rating,
     summary: summary,
@@ -83,18 +88,31 @@ const newReview = async (req, res) => {
   res.sendStatus(201);
 };
 
-const helpful = async (req, res) => {};
+const helpful = async (req, res) => {
+  console.log(reviewId);
+  let update = await ReviewModel.increment(
+    { helpfulness: 1 },
+    {
+      where: {
+        id: req.params.reviewId,
+      },
+    }
+  );
+  res.send("Marked as helpful");
+};
 
 const report = async (req, res) => {
-  const {review_id} = req.query;
   let update = await ReviewModel.update(
-  {
-    reported: true,
-  },
-  where: {
-    id: review_id,
-  });
-  res.send('Reported');
+    {
+      reported: true,
+    },
+    {
+      where: {
+        id: req.params.reviewId,
+      },
+    }
+  );
+  res.send("Reported");
 };
 
 module.exports.allReviews = allReviews;
