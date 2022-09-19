@@ -10,10 +10,13 @@ const allReviews = async (req, res) => {
   page = page ? page : 0;
   count = count ? count : 5;
 
-  // let orderParams = sort === 'newest' ? ['id', 'DESC']
-  // : sort === 'helpful' ? ['helpfulness', 'DESC']
-  // : sort === 'relevant' ?
-
+  let orderParams =
+    sort === "newest"
+      ? ["date", "DESC"]
+      : sort === "helpful"
+      ? ["helpfulness", "DESC"]
+      : ["id", "DESC"];
+  //TODO: Implement relevance sort
   let reviews = await ReviewModel.findAndCountAll({
     limit: count,
     offset: count * page,
@@ -33,12 +36,11 @@ const allReviews = async (req, res) => {
       product_id: parseInt(product_id),
       reported: false,
     },
-    order: orderParams,
+    order: [orderParams],
   });
 
-  console.log(reviews);
   let response = {
-    product: product_id,
+    product: product_id.toString(),
     page: page,
     count: count,
     results: reviews.rows,
@@ -46,7 +48,22 @@ const allReviews = async (req, res) => {
   res.json(response);
 };
 
-const metaData = async (req, res) => {};
+const metaData = async (req, res) => {
+  let response = await ReviewModel.findAll({
+    raw: true,
+    attributes: [
+      ["rating", "ratings"],
+      [sequelize.fn("SUM", sequelize.col("rating")), "total"],
+    ],
+    where: {
+      product_id: req.query.product_id,
+    },
+    group: ["ratings"],
+    order: [["ratings", "ASC"]],
+  });
+
+  console.log(response);
+};
 
 const newReview = async (req, res) => {
   const {
@@ -83,7 +100,6 @@ const newReview = async (req, res) => {
     order: [["id", "DESC"]],
   });
   previousCharRevId = previousCharRevId.dataValues.id + 1;
-  console.log(previousCharRevId);
   let bulk = Object.keys(characteristics).map((id) => {
     return {
       id: previousCharRevId++,
