@@ -82,16 +82,17 @@ const newReview = async (req, res) => {
   let previousCharRevId = await CharReviewsModel.findOne({
     order: [["id", "DESC"]],
   });
-  previousCharRevId = previousCharRevId.dataValues.id;
-  for (let id in characteristics) {
-    previousCharRevId++;
-    let charPost = await CharReviewsModel.create({
-      id: previousCharRevId,
+  previousCharRevId = previousCharRevId.dataValues.id + 1;
+  console.log(previousCharRevId);
+  let bulk = Object.keys(characteristics).map((id) => {
+    return {
+      id: previousCharRevId++,
       reviewId: review_id,
       characteristicId: parseInt(id),
       value: characteristics[id],
-    });
-  }
+    };
+  });
+  await CharReviewsModel.bulkCreate(bulk);
   res.sendStatus(201);
 };
 
