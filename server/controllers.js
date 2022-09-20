@@ -62,13 +62,13 @@ const metaData = async (req, res) => {
   //   group: ["ratings"],
   //   order: [["ratings", "ASC"]],
   // });
-  let response = await sequelize.query(`select json_build_object(
-      'ratings', (select count(rating) from reviews where product_id=${req.query.product_id} group by rating order by rating ASC))
-      as result from reviews r where r.product_id = ${req.query.product_id} `);
+  let response = await sequelize.query(
+    `select json_build_object('product_id', 2, 'ratings', (with ratingsCount as(select rating, count(rating) from reviews where product_id=2 group by rating order by rating ASC) select json_object_agg(rating, count) from ratingsCount))`
+  );
 
   console.log(response);
 };
-
+// as result from reviews r where r.product_id = ${req.query.product_id}
 const newReview = async (req, res) => {
   const {
     product_id,
