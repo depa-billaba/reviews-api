@@ -63,11 +63,11 @@ const metaData = async (req, res) => {
         order by rating ASC
         )
         select json_object_agg(rating, count) from ratingsCount),
-       'recommended', (
-         select json_build_object(
-			 '0', (select count(recommended) from reviews where product_id=${product_id} AND recommended= false ),
-			 '1', (select count(recommended) from reviews where product_id=${product_id} AND recommended=true )
-		 	)
+        'recommended', (
+          select json_build_object(
+          '0', (select count(recommended) from reviews where product_id=${product_id} AND recommended= false ),
+			    '1', (select count(recommended) from reviews where product_id=${product_id} AND recommended=true )
+		     	)
 	   	),
        'characteristics', (
           with chars as(select name, id from characteristics where product_id=${product_id})
