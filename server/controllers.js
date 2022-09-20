@@ -3,6 +3,7 @@ const sequelize = require("./db/index.js");
 const { ReviewModel } = require("../db/reviewModel");
 const { CharacteristicsModel } = require("../db/characteristicsModel");
 const { CharReviewsModel } = require("../db/characteristicsReviewModel");
+const { QueryTypes } = require("sequelize");
 
 const allReviews = async (req, res) => {
   let { page, count, sort, product_id } = req.query;
@@ -49,18 +50,21 @@ const allReviews = async (req, res) => {
 };
 
 const metaData = async (req, res) => {
-  let response = await ReviewModel.findAll({
-    raw: true,
-    attributes: [
-      ["rating", "ratings"],
-      [sequelize.fn("SUM", sequelize.col("rating")), "total"],
-    ],
-    where: {
-      product_id: req.query.product_id,
-    },
-    group: ["ratings"],
-    order: [["ratings", "ASC"]],
-  });
+  // let response = await ReviewModel.findAll({
+  //   raw: true,
+  //   attributes: [
+  //     ["rating", "ratings"],
+  //     [sequelize.fn("COUNT", sequelize.col("rating")), "total"],
+  //   ],
+  //   where: {
+  //     product_id: req.query.product_id,
+  //   },
+  //   group: ["ratings"],
+  //   order: [["ratings", "ASC"]],
+  // });
+  let response = await sequelize.query(`select json_build_object(
+      'ratings', (select count(rating) from reviews where product_id=${req.query.product_id} group by rating order by rating ASC))
+      as result from reviews r where r.product_id = ${req.query.product_id} `);
 
   console.log(response);
 };
