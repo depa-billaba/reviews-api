@@ -1,4 +1,3 @@
-// const { pool } = require("./db/index.js");
 const sequelize = require("./db/index.js");
 const { ReviewModel } = require("../db/reviewModel");
 const { CharacteristicsModel } = require("../db/characteristicsModel");
@@ -13,11 +12,14 @@ const allReviews = async (req, res) => {
 
   let orderParams =
     sort === "newest"
-      ? ["date", "DESC"]
+      ? [["date", "DESC"]]
       : sort === "helpful"
-      ? ["helpfulness", "DESC"]
-      : ["id", "DESC"];
-  //TODO: Implement relevance sort
+      ? [["helpfulness", "DESC"]]
+      : [
+          ["date", "DESC"],
+          ["helpfulness", "DESC"],
+        ];
+
   let reviews = await ReviewModel.findAndCountAll({
     limit: count,
     offset: count * page,
@@ -37,7 +39,7 @@ const allReviews = async (req, res) => {
       product_id: parseInt(product_id),
       reported: false,
     },
-    order: [orderParams],
+    order: orderParams,
   });
 
   let response = {
@@ -50,25 +52,41 @@ const allReviews = async (req, res) => {
 };
 
 const metaData = async (req, res) => {
-  // let response = await ReviewModel.findAll({
-  //   raw: true,
-  //   attributes: [
-  //     ["rating", "ratings"],
-  //     [sequelize.fn("COUNT", sequelize.col("rating")), "total"],
-  //   ],
-  //   where: {
-  //     product_id: req.query.product_id,
-  //   },
-  //   group: ["ratings"],
-  //   order: [["ratings", "ASC"]],
-  // });
+  const { product_id } = req.query;
   let response = await sequelize.query(
-    `select json_build_object('product_id', 2, 'ratings', (with ratingsCount as(select rating, count(rating) from reviews where product_id=2 group by rating order by rating ASC) select json_object_agg(rating, count) from ratingsCount), 'recommended', (with recommendedCount as(select recommended, count(recommended) from reviews where product_id=2 group by recommended order by recommended ASC) select json_object_agg(recommended, count) from recommendedCount))`
+    `select json_build_object(
+      'product_id', ${product_id},
+      'ratings', (
+        with ratingsCount as (select rating, count(rating)
+        from reviews where product_id=${product_id}
+        group by rating
+        order by rating ASC
+        )
+        select json_object_agg(rating, count) from ratingsCount),
+       'recommended', (
+         select json_build_object(
+			 '0', (select count(recommended) from reviews where product_id=${product_id} AND recommended= false ),
+			 '1', (select count(recommended) from reviews where product_id=${product_id} AND recommended=true )
+		 	)
+	   	),
+       'characteristics', (
+          with chars as(select name, id from characteristics where product_id=${product_id})
+          select
+		  json_object_agg(name,
+		 (select json_build_object('id', chars.id, 'value', (select cast(round(avg(value),2) as varchar) from review_characteristics where "characteristicId" =chars.id)))
+		  )
+	     from chars
+	   )
+      )`,
+    {
+      raw: true,
+      type: QueryTypes.SELECT,
+    }
   );
 
-  console.log(response);
+  res.json(response[0]["json_build_object"]);
 };
-// as result from reviews r where r.product_id = ${req.query.product_id}
+
 const newReview = async (req, res) => {
   const {
     product_id,
@@ -125,7 +143,7 @@ const helpful = async (req, res) => {
       },
     }
   );
-  res.send("Marked as helpful");
+  res.sendStatus(204);
 };
 
 const report = async (req, res) => {
@@ -139,7 +157,7 @@ const report = async (req, res) => {
       },
     }
   );
-  res.send("Reported");
+  res.sendStatus(204);
 };
 
 module.exports.allReviews = allReviews;
