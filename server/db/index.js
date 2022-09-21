@@ -11,7 +11,7 @@ const sequelize = new Sequelize(
     dialect: "postgres",
     logging: false,
     pool: {
-      max: 30,
+      max: 50,
       min: 0,
       acquire: 1000000,
       idle: 200000,

@@ -24,6 +24,7 @@ const Review = sequelize.define(
   },
   {
     timestamps: false,
+    // initialAutoIncrement: 5774953,
     indexes: [
       {
         fields: ["product_id"],

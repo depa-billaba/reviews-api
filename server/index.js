@@ -28,6 +28,7 @@ app.post("/reviews", newReview);
 app.put("/reviews/:reviewId/helpful", helpful);
 app.put("/reviews/:reviewId/report", report);
 
-app.listen(process.env.PORT, () => {
+const server = app.listen(process.env.PORT, () => {
   console.log(`server has started on port: ${process.env.PORT}`);
 });
+server.keepAliveTimeout = 49 * 1000;

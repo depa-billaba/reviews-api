@@ -40,7 +40,7 @@ const allReviews = async (req, res) => {
       reported: false,
     },
     order: orderParams,
-  });
+  }).catch((err) => res.sendStatus(500));
 
   let response = {
     product: product_id.toString(),
@@ -53,8 +53,10 @@ const allReviews = async (req, res) => {
 
 const metaData = async (req, res) => {
   const { product_id } = req.query;
-  let response = await sequelize.query(
-    `select json_build_object(
+  if (!product_id) res.status(404).send("Not found");
+  let response = await sequelize
+    .query(
+      `select json_build_object(
       'product_id', ${product_id},
       'ratings', (
         with ratingsCount as (select rating, count(rating)
@@ -68,21 +70,21 @@ const metaData = async (req, res) => {
           '0', (select count(recommended) from reviews where product_id=${product_id} AND recommended= false ),
 			    '1', (select count(recommended) from reviews where product_id=${product_id} AND recommended=true )
 		     	)
-	   	),
+	   	  ),
        'characteristics', (
           with chars as(select name, id from characteristics where product_id=${product_id})
-          select
-		  json_object_agg(name,
-		 (select json_build_object('id', chars.id, 'value', (select cast(round(avg(value),2) as varchar) from review_characteristics where "characteristicId" =chars.id)))
+          select json_object_agg(name,
+		      (select json_build_object('id', chars.id, 'value', (select cast(round(avg(value),2) as varchar) from review_characteristics where "characteristicId" =chars.id)))
 		  )
 	     from chars
 	   )
       )`,
-    {
-      raw: true,
-      type: QueryTypes.SELECT,
-    }
-  );
+      {
+        raw: true,
+        type: QueryTypes.SELECT,
+      }
+    )
+    .catch((err) => res.sendStatus(500));
 
   res.json(response[0]["json_build_object"]);
 };
@@ -116,6 +118,9 @@ const newReview = async (req, res) => {
     photos: photos,
     reviewer_name: name,
     reviewer_email: email,
+  }).catch((err) => {
+    console.log(err);
+    res.sendStatus(500);
   });
   let review_id = reviewPost.dataValues.id;
   let previousCharRevId = await CharReviewsModel.findOne({
@@ -130,7 +135,7 @@ const newReview = async (req, res) => {
       value: characteristics[id],
     };
   });
-  await CharReviewsModel.bulkCreate(bulk);
+  await CharReviewsModel.bulkCreate(bulk).catch((err) => res.sendStatus(500));
   res.sendStatus(201);
 };
 
@@ -142,7 +147,7 @@ const helpful = async (req, res) => {
         id: req.params.reviewId,
       },
     }
-  );
+  ).catch((err) => res.sendStatus(500));
   res.sendStatus(204);
 };
 
@@ -156,7 +161,7 @@ const report = async (req, res) => {
         id: req.params.reviewId,
       },
     }
-  );
+  ).catch((err) => res.sendStatus(500));
   res.sendStatus(204);
 };
 
