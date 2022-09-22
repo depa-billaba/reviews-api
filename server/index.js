@@ -11,9 +11,6 @@ const express = require("express");
 const app = express();
 const { queryParser } = require("express-query-parser");
 
-app.use(
-  express.static(__dirname + "/loaderio-05104211795493e37fb782faecca5751.txt")
-);
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(
@@ -25,6 +22,9 @@ app.use(
   })
 );
 
+app.get("/loaderio-05104211795493e37fb782faecca5751.txt", (req, res) => {
+  express.static(__dirname + "/loaderio-05104211795493e37fb782faecca5751.txt");
+});
 app.get("/reviews", allReviews);
 app.get("/reviews/meta", metaData);
 app.post("/reviews", newReview);
