@@ -24,7 +24,7 @@ app.use(
 );
 
 app.get("/loaderio-05104211795493e37fb782faecca5751.txt", (req, res) => {
-  res.download("../public/loaderio-05104211795493e37fb782faecca5751.txt");
+  res.download("./public/loaderio-05104211795493e37fb782faecca5751.txt");
 });
 app.get("/reviews", allReviews);
 app.get("/reviews/meta", metaData);
